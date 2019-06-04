@@ -1,0 +1,179 @@
+#!/usr/bin/env python
+
+## -- Imports -- ##
+
+#import function,lib
+import subprocess
+import os
+
+
+## -- Menu Function Definition Area -- ##
+
+  ## Function to exit the application ##
+def end():
+	exit()
+
+  ## Function to create and display the menu ##
+def menu():
+
+	# Title Display #
+	print()
+	print('{:^80}'.format('#'*46))
+	print('{:^80}'.format('#' + ' '*4 + 'The Restic Backup Script Generator' + ' '*4 + '#'))	#make sure center words are even number of characters
+	print('{:^80}'.format('#'*46))
+	print()
+	print()
+
+	# Menu options and display #
+	menu_options = ["1 - Generate a new Borg backup job",
+					"0 - Quit"]
+
+	for i in menu_options:
+		print(" "*20 + i)
+	print()
+
+  ## Function to set subsequent working directory ##
+def generate():
+
+	## Create the initial basic file
+	FileName = input(" "*20 + "Please enter a job name (no spaces or special characters)\n" + " "*20 + "-> ")
+	#FilePath = input(" "*20 + "Please enter the path where the job should be stored(Default: this folder)\n" + " "*20 + "-> ")
+	FilePath = "Default"
+	if FilePath == "Default":
+		FilePath = os.getcwd()
+	
+	JobFile = os.path.join(FilePath,FileName)
+	
+	with open(JobFile, 'w') as f:
+		f.write('#!/usr/bin/python\n\n')
+		f.write('import log\n')
+		f.write('import utility\n')
+		f.write('import time\n')
+		f.write('import subprocess\n\n')
+		f.closed
+	
+	LogFile = input(" "*20 + "Please enter the LogFile location (Full Path)\n" + " "*20 + "-> ")
+	Repository = input(" "*20 + "Please enter the Borg location (Full Path)\n" + " "*20 + "-> ")
+	BackupSource = input(" "*20 + "Please enter the Backup Source location (Full Path)\n" + " "*20 + "-> ")
+	
+	Exclusions = []
+	SetExclusions = input(" "*20 + "Do you have any exclusions to add(y/N)\n" + " "*20 + "-> ")
+	SetExclusions = SetExclusions.lower()
+	loop = 1
+	if SetExclusions == "y":
+		while loop == 1:
+			AddExclusion = input(" "*20 + "Enter the excluded directory or wilcard structure (include ' ' wildcard structure)\n" + " "*20 + "-> ")
+			AddExclusion = "--exclude " + AddExclusion
+			Exclusions.append(AddExclusion)
+			additional = input(" "*20 + "Add an additional Exclusion(y/N)\n" + " "*20 + "-> ")
+			additional = additional.lower()
+			if additional == 'y':
+				loop = 1
+			else:
+				loop = 0
+		
+	with open(JobFile, 'a') as f:
+		f.write("#### Source and Repository Section ####\n")
+		f.write("LOGPATH = '" + LogFile + "'\n")
+		f.write("REPOSITORY = '" + Repository +"'\n")
+		f.write("BackupSource = '" + BackupSource + "'\n\n")
+		
+		f.write("#### Log File Section ####\n")
+		f.write("logfile = log.Logging(LOGPATH)\n")
+		f.write("logfile.create()\n")
+		f.write("CURRENT_LOG = logfile.find() #This should provide the logfile to use\n")
+		f.write("logfile.remove(7,CURRENT_LOG)\n\n")
+		
+		f.write("#### Variables Section ####\n")
+		f.write("TIMESTAMP = time.strftime( '%Y-%m-%d_%H:%M:%S' )\n")
+		f.write("teeout = ' | tee -a ' + CURRENT_LOG\n")
+		f.write("BackupJob = \"" + FileName + "-\" + TIMESTAMP\n\n")
+		f.closed
+
+		
+	if Exclusions:
+		BackupCommand = "BORG = 'borg create -v --list --stats --compression zlib,9 ' + REPOSITORY + '::' + BackupJob + ' ' + BackupSource"
+		FullExclusions = " ".join(Exclusions)
+		BackupCommand = BackupCommand + " + \" " + FullExclusions + "\""
+	else:
+		BackupCommand = "BORG = 'borg create -v --list --stats --compression zlib,9 ' + REPOSITORY + '::' + BackupJob + ' ' + BackupSource"
+			
+	with open(JobFile, 'a') as f:
+		f.write("#### Backup Section ####\n")
+		f.write(BackupCommand + "\n")
+		
+		f.write("drive_mounted = utility.mount_verify(REPOSITORY)\n")
+		f.write("if drive_mounted == \"Yes\":\n")
+		f.write("\t# Take Backup and Output to Logfile #\n")
+		f.write("\tsubprocess.call(BORG + teeout, shell=True)")
+		f.closed
+
+	PruneTimeFrames = []
+	SetPruneTimeFrames = input(" "*20 + "Do you want to set up archive pruning?(y/N)\n" + " "*20 + "-> ")
+	SetPruneTimeFrames = SetPruneTimeFrames.lower()
+	if SetPruneTimeFrames == "y":
+		PruneOptionK = input(" "*20 + "Set Keep Within parameter (Enter to skip)\n" + " "*20 + "-> ")
+		if PruneOptionK:
+			PruneOptionK = "--keep-within=" + PruneOptionK
+			PruneTimeFrames.append(PruneOptionK)
+		
+		PruneOptionH = input(" "*20 + "Set Keep Hourly parameter (Enter to skip)\n" + " "*20 + "-> ")
+		if PruneOptionH:
+			PruneOptionH = "--keep-hourly=" + PruneOptionH
+			PruneTimeFrames.append(PruneOptionH)
+		
+		PruneOptionD = input(" "*20 + "Set Keep Daily parameter (Enter to skip)\n" + " "*20 + "-> ")
+		if PruneOptionD:
+			PruneOptionD = "--keep-daily=" + PruneOptionD
+			PruneTimeFrames.append(PruneOptionD)
+		
+		PruneOptionW = input(" "*20 + "Set Keep Weekly parameter (Enter to skip)\n" + " "*20 + "-> ")
+		if PruneOptionW:
+			PruneOptionW = "--keep-weekly=" + PruneOptionW
+			PruneTimeFrames.append(PruneOptionW)
+
+		PruneOptionM = input(" "*20 + "Set Keep Monthly parameter (Enter to skip)\n" + " "*20 + "-> ")
+		if PruneOptionM:
+			PruneOptionM = "--keep-monthly=" + PruneOptionM
+			PruneTimeFrames.append(PruneOptionM)
+
+		PruneOptionY = input(" "*20 + "Set Keep Yearly parameter (Enter to skip)\n" + " "*20 + "-> ")
+		if PruneOptionY:
+			PruneOptionY = "--keep-yearly=" + PruneOptionY
+			PruneTimeFrames.append(PruneOptionY)
+		
+		PruneOptionPrefix = " --prefix=" + FileName + "\""
+		#PruneTimeFrames.append(PruneOptionPrefix)
+
+		FullPruneTimeFrames = " ".join(PruneTimeFrames)
+		PruneCommand = "BorgPrune = \"borg prune -v --stats \" + REPOSITORY +  \" " + FullPruneTimeFrames + PruneOptionPrefix
+		
+		with open(JobFile, 'a') as f:
+			f.write("\n\n")
+			f.write("\t#### Prune Section ####\n")
+			f.write("\t" + PruneCommand + "\n")
+			f.write("\tsubprocess.call(BorgPrune + teeout, shell=True)")
+			
+	subprocess.call("chmod +x " + JobFile,shell=True)
+  
+#### Start the Application Here ####
+
+  ## Clear the screen ##
+subprocess.call("clear",shell=True)
+print()
+print('{:^^80}'.format(''))
+
+  ## Menu loop, display and choice selection ##
+choice = None
+while choice != "0":
+
+	menu()
+
+	choice = input(" "*20 + "Please choose a menu option\n" + " "*20 + "-> ")
+	
+	menu_options = {'0':end, '1':generate}
+	
+	try:
+		menu_options[choice]()
+	except KeyError:
+			print("Oops!  That was not a valid option.  Try again...")
