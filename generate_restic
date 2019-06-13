@@ -6,8 +6,15 @@
 import subprocess
 import os
 import yaml
+import time
+import socket
 
 config = yaml.safe_load(open("config.yml"))
+
+# -- Variables Section -- #
+
+TIMESTAMP = time.strftime( '%Y-%m-%d_%H:%M:%S' )
+HOST = socket.gethostname()
 
 ## -- Menu Function Definition Area -- ##
 
@@ -38,7 +45,10 @@ def menu():
 def generate():
 
 	## Create the initial basic file
-	FileName = input(" "*20 + "Please enter a job name (no spaces or special characters)\n" + " "*20 + "-> ")
+	#FileName = input(" "*20 + "Please enter a job name (no spaces or special characters)\n" + " "*20 + "-> ")
+	BackupName = config['backup1']['backup_name']
+	FileName = HOST + "-" + BackupName + "-backup"
+	
 	#FilePath = input(" "*20 + "Please enter the path where the job should be stored(Default: this folder)\n" + " "*20 + "-> ")
 	FilePath = "Default"
 	if FilePath == "Default":
@@ -92,7 +102,7 @@ def generate():
 		
 		f.write("# -- Variables Section -- #\n\n")
 		f.write("TIMESTAMP = time.strftime( '%Y-%m-%d_%H:%M:%S' )\n")
-		f.write("HOST = socket.gethostname()\n")
+		f.write("HOST = socket.gethostname()\n\n")
 		
 		f.write("# -- Log File Section -- #\n\n")
 		f.write("LOGPATH = '/home/samuel/coffeecup/.log'\n")
