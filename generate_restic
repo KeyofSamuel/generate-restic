@@ -5,6 +5,9 @@
 #import function,lib
 import subprocess
 import os
+import yaml
+
+config = yaml.safe_load(open("config.yml"))
 
 
 ## -- Menu Function Definition Area -- ##
@@ -50,11 +53,18 @@ def generate():
 		f.write('import utility\n')
 		f.write('import time\n')
 		f.write('import subprocess\n\n')
+		f.write('import logging\n\n')
+		f.write('import socket\n\n')
 		f.closed
 	
-	LogFile = input(" "*20 + "Please enter the LogFile location (Full Path)\n" + " "*20 + "-> ")
-	Repository = input(" "*20 + "Please enter the Borg location (Full Path)\n" + " "*20 + "-> ")
-	BackupSource = input(" "*20 + "Please enter the Backup Source location (Full Path)\n" + " "*20 + "-> ")
+	#LogFile = input(" "*20 + "Please enter the LogFile location (Full Path)\n" + " "*20 + "-> ")
+	LogPath = config['Backup1']['logpath']
+	
+	#Repository = input(" "*20 + "Please enter the Borg location (Full Path)\n" + " "*20 + "-> ")
+	Repository = config['Backup1']['repository']
+	
+	#BackupSource = input(" "*20 + "Please enter the Backup Source location (Full Path)\n" + " "*20 + "-> ")
+	BackupSource = config['Backup1']['bkup_source']
 	
 	Exclusions = []
 	SetExclusions = input(" "*20 + "Do you have any exclusions to add(y/N)\n" + " "*20 + "-> ")
