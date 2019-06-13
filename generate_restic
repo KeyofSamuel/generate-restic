@@ -9,7 +9,6 @@ import yaml
 
 config = yaml.safe_load(open("config.yml"))
 
-
 ## -- Menu Function Definition Area -- ##
 
   ## Function to exit the application ##
@@ -49,22 +48,25 @@ def generate():
 	
 	with open(JobFile, 'w') as f:
 		f.write('#!/usr/bin/python\n\n')
+		f.write('## -- Redeye Host Offsite Backup Script -- ##\n\n')
+		f.write('# -- Imports -- #\n\n')
 		f.write('import log\n')
 		f.write('import utility\n')
 		f.write('import time\n')
-		f.write('import subprocess\n\n')
-		f.write('import logging\n\n')
+		f.write('import subprocess\n')
+		f.write('import logging\n')
 		f.write('import socket\n\n')
 		f.closed
 	
 	#LogFile = input(" "*20 + "Please enter the LogFile location (Full Path)\n" + " "*20 + "-> ")
-	LogPath = config['Backup1']['logpath']
+	LogPath = config['backup1']['logpath']
+	print("TEST")
 	
 	#Repository = input(" "*20 + "Please enter the Borg location (Full Path)\n" + " "*20 + "-> ")
-	Repository = config['Backup1']['repository']
+	Repository = config['backup1']['repository']
 	
 	#BackupSource = input(" "*20 + "Please enter the Backup Source location (Full Path)\n" + " "*20 + "-> ")
-	BackupSource = config['Backup1']['bkup_source']
+	BackupSource = config['backup1']['bkup_source']
 	
 	Exclusions = []
 	SetExclusions = input(" "*20 + "Do you have any exclusions to add(y/N)\n" + " "*20 + "-> ")
@@ -83,39 +85,97 @@ def generate():
 				loop = 0
 		
 	with open(JobFile, 'a') as f:
-		f.write("#### Source and Repository Section ####\n")
-		f.write("LOGPATH = '" + LogFile + "'\n")
+		f.write("# -- Source and Repository Section -- #\n\n")
+		#f.write("LOGPATH = '" + LogPath + "'\n")
 		f.write("REPOSITORY = '" + Repository +"'\n")
 		f.write("BackupSource = '" + BackupSource + "'\n\n")
 		
-		f.write("#### Log File Section ####\n")
-		f.write("logfile = log.Logging(LOGPATH)\n")
-		f.write("logfile.create()\n")
-		f.write("CURRENT_LOG = logfile.find() #This should provide the logfile to use\n")
-		f.write("logfile.remove(7,CURRENT_LOG)\n\n")
-		
-		f.write("#### Variables Section ####\n")
+		f.write("# -- Variables Section -- #\n\n")
 		f.write("TIMESTAMP = time.strftime( '%Y-%m-%d_%H:%M:%S' )\n")
-		f.write("teeout = ' | tee -a ' + CURRENT_LOG\n")
-		f.write("BackupJob = \"" + FileName + "-\" + TIMESTAMP\n\n")
+		f.write("HOST = socket.gethostname()\n")
+		
+		f.write("# -- Log File Section -- #\n\n")
+		f.write("LOGPATH = '/home/samuel/coffeecup/.log'\n")
+		f.write("logfile = log.Logging(LOGPATH)\n")
+		f.write("CURRENT_LOG = logfile.find()\n")
+		f.write("logging.basicConfig(filename=CURRENT_LOG, format='%(asctime)s :: %(levelname)s: %(message)s', level=logging.INFO)\n")
+		f.write("LogOut = ' | tee -a ' + CURRENT_LOG\n\n")
+
+		f.write("logging.info(\"\\n*** HOST: \" + HOST + \" ***\")\n\n")
+
+		f.write("#logfile.create()\n")
+		f.write("#logfile.remove(7,CURRENT_LOG)\n\n")
+
+		
+		#f.write("teeout = ' | tee -a ' + CURRENT_LOG\n")
+		#f.write("BackupJob = \"" + FileName + "-\" + TIMESTAMP\n\n")
 		f.closed
 
 		
-	if Exclusions:
-		BackupCommand = "BORG = 'borg create -v --list --stats --compression zlib,9 ' + REPOSITORY + '::' + BackupJob + ' ' + BackupSource"
-		FullExclusions = " ".join(Exclusions)
-		BackupCommand = BackupCommand + " + \" " + FullExclusions + "\""
-	else:
-		BackupCommand = "BORG = 'borg create -v --list --stats --compression zlib,9 ' + REPOSITORY + '::' + BackupJob + ' ' + BackupSource"
+#	if Exclusions:
+#		#BackupCommand = "BORG = 'borg create -v --list --stats --compression zlib,9 ' + REPOSITORY + '::' + BackupJob + ' ' + BackupSource"
+#		FullExclusions = " ".join(Exclusions)
+#		BackupCommand = BackupCommand + " + \" " + FullExclusions + "\""
+#	else:
+#		BackupCommand = "BORG = 'borg create -v --list --stats --compression zlib,9 ' + REPOSITORY + '::' + BackupJob + ' ' + BackupSource"
+
+		BackupCommand = (f'restic -r {Repository} backup {BackupSource} {Exclusions} --tag Coffeecup')
+
+######################################################################################3
+###
+## Backup Coffeecup Folders
+#
+
+#try:
+#	RESTIC = (f'restic -r {REPOSITORY} backup {coffeecup_source} {coffeecup_exclusions} --tag Coffeecup')
+	#RESTIC = 'restic -r b2:coffeecup-backup:coffeecup.restic backup /home/samuel/coffeecup/ --exclude=/home/samuel/coffeecup/vms --tag Coffeecup'
+#	logging.info('Host Redeye coffeecup backups completed')
+#	subprocess.call(RESTIC + teeout, shell=True)
+#except:
+#	logging.info('!!! Host Redeye coffeecup backups failed !!!')
+
+###
+## Prune Coffeecup Backups
+#
+
+#try:
+#	RESTIC = (f'restic -r {REPOSITORY} forget --keep-last 84 --keep-daily 185 --keep-weekly 204 --prune --tag Coffeecup --group-by tags')
+#	subprocess.call(RESTIC + teeout, shell=True)
+#	logging.info('Host Redeye coffeecup backups pruned')
+#except:
+#	logging.info('!!! Host Redeye coffeecup backup pruning failed !!!')
+#########################################################################################
+
 			
 	with open(JobFile, 'a') as f:
-		f.write("#### Backup Section ####\n")
-		f.write(BackupCommand + "\n")
+		f.write("# -- Backup Section -- #\n\n")
 		
-		f.write("drive_mounted = utility.mount_verify(REPOSITORY)\n")
-		f.write("if drive_mounted == \"Yes\":\n")
-		f.write("\t# Take Backup and Output to Logfile #\n")
-		f.write("\tsubprocess.call(BORG + teeout, shell=True)")
+		f.write("try:\n")
+		f.write("\tRESTIC = (f'restic -r {REPOSITORY} backup {coffeecup_source} {coffeecup_exclusions} --tag Coffeecup')\n")
+	#RESTIC = 'restic -r b2:coffeecup-backup:coffeecup.restic backup /home/samuel/coffeecup/ --exclude=/home/samuel/coffeecup/vms --tag Coffeecup'
+		f.write("\tlogging.info('Host ' + HOST + ' backups completed')\n")
+		f.write("\tsubprocess.call(RESTIC + LogOut, shell=True)\n")
+		f.write("except:\n")
+		f.write("\tlogging.info('!!! Host ' + HOST + ' backups failed !!!')\n")
+
+		f.write("# -- Prune Section -- #\n\n")
+		
+		f.write("try:\n")
+		f.write("\tRESTIC = (f'restic -r {REPOSITORY} forget --keep-last 84 --keep-daily 185 --keep-weekly 204 --prune --tag Coffeecup --group-by tags')\n")
+		f.write("\tsubprocess.call(RESTIC + LogOut, shell=True)\n")
+		f.write("\tlogging.info('Host ' + HOST + ' pruning completed')\n")
+		#	logging.info('Host Redeye coffeecup backups pruned')
+		f.write("except:\n")
+		f.write("\tlogging.info('!!! Host ' + HOST + ' pruning failed !!!')\n")
+
+
+#		f.write(BackupCommand + "\n")
+#		f.write("drive_mounted = utility.mount_verify(REPOSITORY)\n")
+#		f.write("if drive_mounted == \"Yes\":\n")
+#		f.write("\t# Take Backup and Output to Logfile #\n")
+#		f.write("\tsubprocess.call(BORG + teeout, shell=True)")
+
+
 		f.closed
 
 	PruneTimeFrames = []
