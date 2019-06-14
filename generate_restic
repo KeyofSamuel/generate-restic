@@ -70,7 +70,6 @@ def generate():
 	
 	#LogFile = input(" "*20 + "Please enter the LogFile location (Full Path)\n" + " "*20 + "-> ")
 	LogPath = config['backup1']['logpath']
-	print("TEST")
 	
 	#Repository = input(" "*20 + "Please enter the Borg location (Full Path)\n" + " "*20 + "-> ")
 	Repository = config['backup1']['repository']
@@ -78,27 +77,41 @@ def generate():
 	#BackupSource = input(" "*20 + "Please enter the Backup Source location (Full Path)\n" + " "*20 + "-> ")
 	BackupSource = config['backup1']['bkup_source']
 	
-	Exclusions = []
-	SetExclusions = input(" "*20 + "Do you have any exclusions to add(y/N)\n" + " "*20 + "-> ")
-	SetExclusions = SetExclusions.lower()
-	loop = 1
-	if SetExclusions == "y":
-		while loop == 1:
-			AddExclusion = input(" "*20 + "Enter the excluded directory or wilcard structure (include ' ' wildcard structure)\n" + " "*20 + "-> ")
-			AddExclusion = "--exclude " + AddExclusion
-			Exclusions.append(AddExclusion)
-			additional = input(" "*20 + "Add an additional Exclusion(y/N)\n" + " "*20 + "-> ")
-			additional = additional.lower()
-			if additional == 'y':
-				loop = 1
-			else:
-				loop = 0
+	Exclusions = ''
+	set_exclusions = config['backup1']['bkup_exclusions']
+	for AddExclusion in set_exclusions:
+		AddExclusion = " --exclude=" + AddExclusion
+		Exclusions = Exclusions + AddExclusion
+
+	Tags = ''
+	set_tags = config['backup1']['bkup_tags']
+	for AddTag in set_tags:
+		AddTag = " --tag " + AddTag
+		Tags = Tags + AddTag
+	
+	
+#	SetExclusions = input(" "*20 + "Do you have any exclusions to add(y/N)\n" + " "*20 + "-> ")
+#	SetExclusions = SetExclusions.lower()
+#	loop = 1
+#	if SetExclusions == "y":
+#		while loop == 1:
+#			AddExclusion = input(" "*20 + "Enter the excluded directory or wilcard structure (include ' ' wildcard structure)\n" + " "*20 + "-> ")
+#			AddExclusion = "--exclude " + AddExclusion
+#			Exclusions.append(AddExclusion)
+#			additional = input(" "*20 + "Add an additional Exclusion(y/N)\n" + " "*20 + "-> ")
+#			additional = additional.lower()
+#			if additional == 'y':
+#				loop = 1
+#			else:
+#				loop = 0
 		
 	with open(JobFile, 'a') as f:
 		f.write("# -- Source and Repository Section -- #\n\n")
 		#f.write("LOGPATH = '" + LogPath + "'\n")
 		f.write("REPOSITORY = '" + Repository +"'\n")
-		f.write("BackupSource = '" + BackupSource + "'\n\n")
+		f.write("BackupSource = '" + BackupSource + "'\n")
+		f.write("BackupExclusions = '" + Exclusions + "'\n")
+		f.write("BackupTags = '" + Tags + "'\n\n")
 		
 		f.write("# -- Variables Section -- #\n\n")
 		f.write("TIMESTAMP = time.strftime( '%Y-%m-%d_%H:%M:%S' )\n")
@@ -161,7 +174,7 @@ def generate():
 		f.write("# -- Backup Section -- #\n\n")
 		
 		f.write("try:\n")
-		f.write("\tRESTIC = (f'restic -r {REPOSITORY} backup {coffeecup_source} {coffeecup_exclusions} --tag Coffeecup')\n")
+		f.write("\tRESTIC = (f'restic -r {REPOSITORY} backup {BackupSource} {BackupExclusions} {BackupTags}')\n")
 	#RESTIC = 'restic -r b2:coffeecup-backup:coffeecup.restic backup /home/samuel/coffeecup/ --exclude=/home/samuel/coffeecup/vms --tag Coffeecup'
 		f.write("\tlogging.info('Host ' + HOST + ' backups completed')\n")
 		f.write("\tsubprocess.call(RESTIC + LogOut, shell=True)\n")
