@@ -96,8 +96,9 @@ def generate():
 		for i in TimeFrame:
 			P = i
 			T = str(TimeFrame[i])
-			P = " --keep-" + P + " " + T
-			PruningOptions = PruningOptions + P
+			if T != "None":
+				P = " --keep-" + P + " " + T
+				PruningOptions = PruningOptions + P
 
 
 	
@@ -191,16 +192,16 @@ def generate():
 		f.write("\tlogging.info('Host ' + HOST + ' backups completed')\n")
 		f.write("\tsubprocess.call(RESTIC + LogOut, shell=True)\n")
 		f.write("except:\n")
-		f.write("\tlogging.info('!!! Host ' + HOST + ' backups failed !!!')\n")
+		f.write("\tlogging.info('!!! Host ' + HOST + ' backups failed !!!')\n\n")
 
 		
 		Pruning = config['backup1']['pruning']
 		if Pruning:
 
-			f.write("# -- Prune Section -- #\n\n")
+			f.write("# -- Pruning Section -- #\n\n")
 			
 			f.write("try:\n")
-			f.write("\tRESTIC = (f'restic -r {REPOSITORY} forget --keep-last 84 --keep-daily 185 --keep-weekly 204 --prune --tag Coffeecup --group-by tags')\n")
+			f.write("\tRESTIC = (f'restic -r {REPOSITORY} forget {PruningOptions} --prune --tag Coffeecup --group-by tags')\n")
 			f.write("\tsubprocess.call(RESTIC + LogOut, shell=True)\n")
 			f.write("\tlogging.info('Host ' + HOST + ' pruning completed')\n")
 			#	logging.info('Host Redeye coffeecup backups pruned')
