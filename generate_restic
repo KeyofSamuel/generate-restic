@@ -88,7 +88,18 @@ def generate():
 	for AddTag in set_tags:
 		AddTag = " --tag " + AddTag
 		Tags = Tags + AddTag
-	
+
+	PruningOptions = ''
+	set_prunings = config['backup1']['pruning_options']
+	for TimeFrame in set_prunings:
+		
+		for i in TimeFrame:
+			P = i
+			T = str(TimeFrame[i])
+			P = " --keep-" + P + " " + T
+			PruningOptions = PruningOptions + P
+
+
 	
 #	SetExclusions = input(" "*20 + "Do you have any exclusions to add(y/N)\n" + " "*20 + "-> ")
 #	SetExclusions = SetExclusions.lower()
@@ -111,7 +122,8 @@ def generate():
 		f.write("REPOSITORY = '" + Repository +"'\n")
 		f.write("BackupSource = '" + BackupSource + "'\n")
 		f.write("BackupExclusions = '" + Exclusions + "'\n")
-		f.write("BackupTags = '" + Tags + "'\n\n")
+		f.write("BackupTags = '" + Tags + "'\n")
+		f.write("PruningOptions = '" + PruningOptions + "'\n\n")
 		
 		f.write("# -- Variables Section -- #\n\n")
 		f.write("TIMESTAMP = time.strftime( '%Y-%m-%d_%H:%M:%S' )\n")
@@ -181,15 +193,19 @@ def generate():
 		f.write("except:\n")
 		f.write("\tlogging.info('!!! Host ' + HOST + ' backups failed !!!')\n")
 
-		f.write("# -- Prune Section -- #\n\n")
 		
-		f.write("try:\n")
-		f.write("\tRESTIC = (f'restic -r {REPOSITORY} forget --keep-last 84 --keep-daily 185 --keep-weekly 204 --prune --tag Coffeecup --group-by tags')\n")
-		f.write("\tsubprocess.call(RESTIC + LogOut, shell=True)\n")
-		f.write("\tlogging.info('Host ' + HOST + ' pruning completed')\n")
-		#	logging.info('Host Redeye coffeecup backups pruned')
-		f.write("except:\n")
-		f.write("\tlogging.info('!!! Host ' + HOST + ' pruning failed !!!')\n")
+		Pruning = config['backup1']['pruning']
+		if Pruning:
+
+			f.write("# -- Prune Section -- #\n\n")
+			
+			f.write("try:\n")
+			f.write("\tRESTIC = (f'restic -r {REPOSITORY} forget --keep-last 84 --keep-daily 185 --keep-weekly 204 --prune --tag Coffeecup --group-by tags')\n")
+			f.write("\tsubprocess.call(RESTIC + LogOut, shell=True)\n")
+			f.write("\tlogging.info('Host ' + HOST + ' pruning completed')\n")
+			#	logging.info('Host Redeye coffeecup backups pruned')
+			f.write("except:\n")
+			f.write("\tlogging.info('!!! Host ' + HOST + ' pruning failed !!!')\n")
 
 
 #		f.write(BackupCommand + "\n")
