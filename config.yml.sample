@@ -1,0 +1,30 @@
+global:
+  logging: enable
+  logpath: /home/samuel/coffeecup/.log
+
+Sample_Backup: # The name of the backup job
+  repository: /path/to/repository
+  bkup_source: /path/to/backup
+  bkup_exclusions:
+    - /path/to/exclusion1
+    - /path/to/exclusion2
+  bkup_tags:
+    - tag1
+    - tag2
+  pruning: true
+  pruning_options:
+    - last: 1
+    - hourly: 1
+    - daily: 1
+    - weekly: 1
+    - monthly: 1
+    - yearly: 1
+    - within: 1
+  pruning_options_tags: # Keep snapshots that have this tag
+    - SAMPLE1
+    - SAMPLE2
+  pruning_tags:  # Prune snapshots with this tag
+    - SAMPLE1  # Use for OR
+    - SAMPLE,SAMPLE2  # Use for AND
+  hostname: DEFAULT #CAPS are important for DEFAULT option.  DEFAULT specifies to only prune snapshots from this host.  Remove to prune snapshots from any host
+  group_by: tags #paths,tags,hosts
