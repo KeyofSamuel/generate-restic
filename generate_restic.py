@@ -27,6 +27,7 @@ except:
 	print("Configuration file at: \n\n\t" + config_path + "\n\ndoes not exist!  \n\nExiting gracefully...\n")
 	exit()
 
+# -- Function to end the script -- #
 def end():
 	exit()
 
