@@ -6,22 +6,27 @@
 
 import subprocess
 import os
+import pwd
 import yaml
 import time
 import socket
-
-# -- Load config from .yml file -- #
-
-config = yaml.safe_load(open("config.yml"))
 
 # -- Variables Section -- #
 
 TIMESTAMP = time.strftime( '%Y-%m-%d_%H:%M:%S' )
 HOST = socket.gethostname()
+USERNAME = pwd.getpwuid(os.getuid()).pw_name
 
-## -- Menu Function Definition Area -- ##
+# -- Load config from .yml file -- #
 
-# -- Function to exit the application -- #
+config_path = "/home/" + USERNAME + "/.config/restic-backup/config.yml"
+
+try:	
+	config = yaml.safe_load(open(config_path))
+except:	
+	print("Configuration file at: \n\n\t" + config_path + "\n\ndoes not exist!  \n\nExiting gracefully...\n")
+	exit()
+
 def end():
 	exit()
 
