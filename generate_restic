@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 
-## -- Imports -- ##
+#### -- Generate Restic Backup Script -- #### 
 
-#import function,lib
+# -- Imports -- #
+
 import subprocess
 import os
 import yaml
 import time
 import socket
+
+# -- Load config from .yml file -- #
 
 config = yaml.safe_load(open("config.yml"))
 
@@ -18,11 +21,11 @@ HOST = socket.gethostname()
 
 ## -- Menu Function Definition Area -- ##
 
-  ## Function to exit the application ##
+# -- Function to exit the application -- #
 def end():
 	exit()
 
-  ## Function to create and display the menu ##
+# -- Function to create and display the menu -- #
 def menu():
 
 	# Title Display #
@@ -34,48 +37,30 @@ def menu():
 	print()
 
 	# Menu options and display #
-	menu_options = ["1 - Generate a new Borg backup job",
+	menu_options = ["1 - Generate a new Restic backup job",
 					"0 - Quit"]
 
 	for i in menu_options:
 		print(" "*20 + i)
 	print()
 
-  ## Function to set subsequent working directory ##
+# -- Function to set subsequent working directory -- #
 def generate():
 
-	## Create the initial basic file
-	#FileName = input(" "*20 + "Please enter a job name (no spaces or special characters)\n" + " "*20 + "-> ")
+	## Create the initial basic file ##
 	BackupName = config['backup1']['backup_name']
 	FileName = HOST + "-" + BackupName + "-backup"
 	
-	#FilePath = input(" "*20 + "Please enter the path where the job should be stored(Default: this folder)\n" + " "*20 + "-> ")
 	FilePath = "Default"
 	if FilePath == "Default":
 		FilePath = os.getcwd()
-	
+
+	## Variable assignments ##
 	JobFile = os.path.join(FilePath,FileName)
-	
-	with open(JobFile, 'w') as f:
-		f.write('#!/usr/bin/python\n\n')
-		f.write('## -- Redeye Host Offsite Backup Script -- ##\n\n')
-		f.write('# -- Imports -- #\n\n')
-		f.write('import log\n')
-		f.write('import utility\n')
-		f.write('import time\n')
-		f.write('import subprocess\n')
-		f.write('import logging\n')
-		f.write('import socket\n\n')
-		f.closed
-	
-	#LogFile = input(" "*20 + "Please enter the LogFile location (Full Path)\n" + " "*20 + "-> ")
 	LogPath = config['backup1']['logpath']
-	
-	#Repository = input(" "*20 + "Please enter the Borg location (Full Path)\n" + " "*20 + "-> ")
 	Repository = config['backup1']['repository']
-	
-	#BackupSource = input(" "*20 + "Please enter the Backup Source location (Full Path)\n" + " "*20 + "-> ")
 	BackupSource = config['backup1']['bkup_source']
+	GroupBy = config['backup1']['group_by']
 	
 	Exclusions = ''
 	set_exclusions = config['backup1']['bkup_exclusions']
@@ -92,7 +77,6 @@ def generate():
 	PruningOptions = ''
 	set_prunings = config['backup1']['pruning_options']
 	for TimeFrame in set_prunings:
-		
 		for i in TimeFrame:
 			P = i
 			T = str(TimeFrame[i])
@@ -100,31 +84,36 @@ def generate():
 				P = " --keep-" + P + " " + T
 				PruningOptions = PruningOptions + P
 
+	PruningTags = ''
+	if config['backup1']['pruning_tags']:
+		set_pruningtags = config['backup1']['pruning_tags']
+		for AddPruningTag in set_pruningtags:
+			AddPruningTag = " --tag " + AddPruningTag
+			PruningTags = PruningTags + AddPruningTag
 
+	## Write imports to backup script ##
+	with open(JobFile, 'w') as f:
+		f.write('#!/usr/bin/python\n\n')
+		f.write(f'## -- Host: {HOST} Offsite Backup Script -- ##\n\n')
+		f.write('# -- Imports -- #\n\n')
+		f.write('import log\n')
+		f.write('import utility\n')
+		f.write('import time\n')
+		f.write('import subprocess\n')
+		f.write('import logging\n')
+		f.write('import socket\n\n')
+		f.closed
 	
-#	SetExclusions = input(" "*20 + "Do you have any exclusions to add(y/N)\n" + " "*20 + "-> ")
-#	SetExclusions = SetExclusions.lower()
-#	loop = 1
-#	if SetExclusions == "y":
-#		while loop == 1:
-#			AddExclusion = input(" "*20 + "Enter the excluded directory or wilcard structure (include ' ' wildcard structure)\n" + " "*20 + "-> ")
-#			AddExclusion = "--exclude " + AddExclusion
-#			Exclusions.append(AddExclusion)
-#			additional = input(" "*20 + "Add an additional Exclusion(y/N)\n" + " "*20 + "-> ")
-#			additional = additional.lower()
-#			if additional == 'y':
-#				loop = 1
-#			else:
-#				loop = 0
-		
+	## Write options to backup script ##
 	with open(JobFile, 'a') as f:
 		f.write("# -- Source and Repository Section -- #\n\n")
-		#f.write("LOGPATH = '" + LogPath + "'\n")
 		f.write("REPOSITORY = '" + Repository +"'\n")
 		f.write("BackupSource = '" + BackupSource + "'\n")
 		f.write("BackupExclusions = '" + Exclusions + "'\n")
 		f.write("BackupTags = '" + Tags + "'\n")
-		f.write("PruningOptions = '" + PruningOptions + "'\n\n")
+		f.write("PruningOptions = '" + PruningOptions + "'\n")
+		f.write("PruningTags = '" + PruningTags + "'\n")
+		f.write("GroupBy = '" + GroupBy + "'\n\n")
 		
 		f.write("# -- Variables Section -- #\n\n")
 		f.write("TIMESTAMP = time.strftime( '%Y-%m-%d_%H:%M:%S' )\n")
@@ -139,141 +128,43 @@ def generate():
 
 		f.write("logging.info(\"\\n*** HOST: \" + HOST + \" ***\")\n\n")
 
-		f.write("#logfile.create()\n")
-		f.write("#logfile.remove(7,CURRENT_LOG)\n\n")
-
-		
-		#f.write("teeout = ' | tee -a ' + CURRENT_LOG\n")
-		#f.write("BackupJob = \"" + FileName + "-\" + TIMESTAMP\n\n")
 		f.closed
 
-		
-#	if Exclusions:
-#		#BackupCommand = "BORG = 'borg create -v --list --stats --compression zlib,9 ' + REPOSITORY + '::' + BackupJob + ' ' + BackupSource"
-#		FullExclusions = " ".join(Exclusions)
-#		BackupCommand = BackupCommand + " + \" " + FullExclusions + "\""
-#	else:
-#		BackupCommand = "BORG = 'borg create -v --list --stats --compression zlib,9 ' + REPOSITORY + '::' + BackupJob + ' ' + BackupSource"
-
-		BackupCommand = (f'restic -r {Repository} backup {BackupSource} {Exclusions} --tag Coffeecup')
-
-######################################################################################3
-###
-## Backup Coffeecup Folders
-#
-
-#try:
-#	RESTIC = (f'restic -r {REPOSITORY} backup {coffeecup_source} {coffeecup_exclusions} --tag Coffeecup')
-	#RESTIC = 'restic -r b2:coffeecup-backup:coffeecup.restic backup /home/samuel/coffeecup/ --exclude=/home/samuel/coffeecup/vms --tag Coffeecup'
-#	logging.info('Host Redeye coffeecup backups completed')
-#	subprocess.call(RESTIC + teeout, shell=True)
-#except:
-#	logging.info('!!! Host Redeye coffeecup backups failed !!!')
-
-###
-## Prune Coffeecup Backups
-#
-
-#try:
-#	RESTIC = (f'restic -r {REPOSITORY} forget --keep-last 84 --keep-daily 185 --keep-weekly 204 --prune --tag Coffeecup --group-by tags')
-#	subprocess.call(RESTIC + teeout, shell=True)
-#	logging.info('Host Redeye coffeecup backups pruned')
-#except:
-#	logging.info('!!! Host Redeye coffeecup backup pruning failed !!!')
-#########################################################################################
-
-			
+	## Write backup section to script ##
 	with open(JobFile, 'a') as f:
 		f.write("# -- Backup Section -- #\n\n")
 		
 		f.write("try:\n")
 		f.write("\tRESTIC = (f'restic -r {REPOSITORY} backup {BackupSource} {BackupExclusions} {BackupTags}')\n")
-	#RESTIC = 'restic -r b2:coffeecup-backup:coffeecup.restic backup /home/samuel/coffeecup/ --exclude=/home/samuel/coffeecup/vms --tag Coffeecup'
 		f.write("\tlogging.info('Host ' + HOST + ' backups completed')\n")
 		f.write("\tsubprocess.call(RESTIC + LogOut, shell=True)\n")
 		f.write("except:\n")
 		f.write("\tlogging.info('!!! Host ' + HOST + ' backups failed !!!')\n\n")
-
 		
+	## Write pruning section to script ##
 		Pruning = config['backup1']['pruning']
 		if Pruning:
-
 			f.write("# -- Pruning Section -- #\n\n")
 			
 			f.write("try:\n")
-			f.write("\tRESTIC = (f'restic -r {REPOSITORY} forget {PruningOptions} --prune --tag Coffeecup --group-by tags')\n")
+			f.write("\tRESTIC = (f'restic -r {REPOSITORY} forget {PruningOptions} --prune {PruningTags} {GroupBy}')\n")
 			f.write("\tsubprocess.call(RESTIC + LogOut, shell=True)\n")
 			f.write("\tlogging.info('Host ' + HOST + ' pruning completed')\n")
-			#	logging.info('Host Redeye coffeecup backups pruned')
 			f.write("except:\n")
 			f.write("\tlogging.info('!!! Host ' + HOST + ' pruning failed !!!')\n")
 
-
-#		f.write(BackupCommand + "\n")
-#		f.write("drive_mounted = utility.mount_verify(REPOSITORY)\n")
-#		f.write("if drive_mounted == \"Yes\":\n")
-#		f.write("\t# Take Backup and Output to Logfile #\n")
-#		f.write("\tsubprocess.call(BORG + teeout, shell=True)")
-
-
 		f.closed
-
-	PruneTimeFrames = []
-	SetPruneTimeFrames = input(" "*20 + "Do you want to set up archive pruning?(y/N)\n" + " "*20 + "-> ")
-	SetPruneTimeFrames = SetPruneTimeFrames.lower()
-	if SetPruneTimeFrames == "y":
-		PruneOptionK = input(" "*20 + "Set Keep Within parameter (Enter to skip)\n" + " "*20 + "-> ")
-		if PruneOptionK:
-			PruneOptionK = "--keep-within=" + PruneOptionK
-			PruneTimeFrames.append(PruneOptionK)
-		
-		PruneOptionH = input(" "*20 + "Set Keep Hourly parameter (Enter to skip)\n" + " "*20 + "-> ")
-		if PruneOptionH:
-			PruneOptionH = "--keep-hourly=" + PruneOptionH
-			PruneTimeFrames.append(PruneOptionH)
-		
-		PruneOptionD = input(" "*20 + "Set Keep Daily parameter (Enter to skip)\n" + " "*20 + "-> ")
-		if PruneOptionD:
-			PruneOptionD = "--keep-daily=" + PruneOptionD
-			PruneTimeFrames.append(PruneOptionD)
-		
-		PruneOptionW = input(" "*20 + "Set Keep Weekly parameter (Enter to skip)\n" + " "*20 + "-> ")
-		if PruneOptionW:
-			PruneOptionW = "--keep-weekly=" + PruneOptionW
-			PruneTimeFrames.append(PruneOptionW)
-
-		PruneOptionM = input(" "*20 + "Set Keep Monthly parameter (Enter to skip)\n" + " "*20 + "-> ")
-		if PruneOptionM:
-			PruneOptionM = "--keep-monthly=" + PruneOptionM
-			PruneTimeFrames.append(PruneOptionM)
-
-		PruneOptionY = input(" "*20 + "Set Keep Yearly parameter (Enter to skip)\n" + " "*20 + "-> ")
-		if PruneOptionY:
-			PruneOptionY = "--keep-yearly=" + PruneOptionY
-			PruneTimeFrames.append(PruneOptionY)
-		
-		PruneOptionPrefix = " --prefix=" + FileName + "\""
-		#PruneTimeFrames.append(PruneOptionPrefix)
-
-		FullPruneTimeFrames = " ".join(PruneTimeFrames)
-		PruneCommand = "BorgPrune = \"borg prune -v --stats \" + REPOSITORY +  \" " + FullPruneTimeFrames + PruneOptionPrefix
-		
-		with open(JobFile, 'a') as f:
-			f.write("\n\n")
-			f.write("\t#### Prune Section ####\n")
-			f.write("\t" + PruneCommand + "\n")
-			f.write("\tsubprocess.call(BorgPrune + teeout, shell=True)")
-			
+	
 	subprocess.call("chmod +x " + JobFile,shell=True)
   
-#### Start the Application Here ####
+## -- Start the Application Here -- ##
 
-  ## Clear the screen ##
+# -- Clear the screen -- #
 subprocess.call("clear",shell=True)
 print()
 print('{:^^80}'.format(''))
 
-  ## Menu loop, display and choice selection ##
+# -- Menu loop, display and choice selection -- #
 choice = None
 while choice != "0":
 
