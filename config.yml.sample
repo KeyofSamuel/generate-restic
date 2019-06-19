@@ -1,6 +1,6 @@
 global:
   logging: enable
-  logpath: /home/samuel/coffeecup/.log
+  logpath: /path/to/.log
 
 Sample_Backup: # The name of the backup job
   repository: /path/to/repository
