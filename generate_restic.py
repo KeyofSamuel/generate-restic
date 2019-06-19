@@ -60,10 +60,7 @@ def generate():
 			## Create the initial basic file ##
 			BackupName = BACKUP
 			FileName = HOST + "-" + BackupName + "-backup"
-			
-			FilePath = "Default"
-			if FilePath == "Default":
-				FilePath = os.getcwd()
+			FilePath = "/home/" + USERNAME + "/.config/restic-backup"
 
 			## Variable assignments ##
 			JobFile = os.path.join(FilePath,FileName)
