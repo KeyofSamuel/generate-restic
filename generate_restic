@@ -1,2 +1,2 @@
 #!/bin/bash
-./usr/local/src/generate-restic/generate-restic.py
+/usr/local/src/generate-restic/generate_restic.py
