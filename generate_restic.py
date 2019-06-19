@@ -58,7 +58,6 @@ def generate():
 		if BACKUP != "global": # ignore the global config section
 
 			## Create the initial basic file ##
-			#BackupName = config[BACKUP]['backup_name']
 			BackupName = BACKUP
 			FileName = HOST + "-" + BackupName + "-backup"
 			
@@ -74,16 +73,18 @@ def generate():
 			GroupBy = config[BACKUP]['group_by']
 			
 			Exclusions = ''
-			set_exclusions = config[BACKUP]['bkup_exclusions']
-			for AddExclusion in set_exclusions:
-				AddExclusion = " --exclude=" + AddExclusion
-				Exclusions = Exclusions + AddExclusion
+			if config[BACKUP]['bkup_exclusions']:
+				set_exclusions = config[BACKUP]['bkup_exclusions']
+				for AddExclusion in set_exclusions:
+					AddExclusion = " --exclude=" + AddExclusion
+					Exclusions = Exclusions + AddExclusion
 
 			Tags = ''
-			set_tags = config[BACKUP]['bkup_tags']
-			for AddTag in set_tags:
-				AddTag = " --tag " + AddTag
-				Tags = Tags + AddTag
+			if config[BACKUP]['bkup_tags']:
+				set_tags = config[BACKUP]['bkup_tags']
+				for AddTag in set_tags:
+					AddTag = " --tag " + AddTag
+					Tags = Tags + AddTag
 
 			PruningOptions = ''
 			set_prunings = config[BACKUP]['pruning_options']
@@ -95,10 +96,11 @@ def generate():
 						P = " --keep-" + P + " " + T
 						PruningOptions = PruningOptions + P
 
-			set_pruning_options_tags = config[BACKUP]['pruning_options_tags']
-			for KeepTags in set_pruning_options_tags:
-				KeepTags = " --keep-tag " + KeepTags
-				PruningOptions = PruningOptions + KeepTags
+			if config[BACKUP]['pruning_options_tags']:
+				set_pruning_options_tags = config[BACKUP]['pruning_options_tags']
+				for KeepTags in set_pruning_options_tags:
+					KeepTags = " --keep-tag " + KeepTags
+					PruningOptions = PruningOptions + KeepTags
 
 			PruningTags = ''
 			if config[BACKUP]['pruning_tags']:
