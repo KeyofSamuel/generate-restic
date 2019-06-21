@@ -1,6 +1,8 @@
 # README for the Restic script generator
 
-## Version 0.9.1
+__Version 0.9.3__
+
+The script seems to be functional and has been tested for creating valid backup scripts, but has not been fully vetted.  Verify all backup scripts and use at your own risk.
 
 ## About
 
@@ -11,6 +13,10 @@
 ### Install the application
   
   The application does not care where it is installed to.  It can be run by the 'generate_restic.py' script from any location, providing the configuration file is accessible (see below).  The script can also be placed in a location such as '/usr/local/src' and then the 'generate_restic' shell script (without an extension) placed in '/usr/local/bin' so that it can be called from anywhere as part of the $PATH.  The shell script specifically calls '/usr/local/src/generate_restic/generate_restic.py'.  If you place the source files in another location, modify the shell script appropriately.
+
+#### Arch PKGBUILD
+
+  While this application has not been added to the Arch Linux AUR, a PKGBUILD file for Arch Linux does exist and can be obtained by sending an email to the project creator.
   
 ### Install the configuration file
 
@@ -27,3 +33,9 @@
   * 'pruning_tags:' are part of Restic's "remove" options.  Tags set here are used to include/exclude specific tags during the pruning process.  A list of individual tags are considered as an OR list (eg. tag1 OR tag2).  Tags set together with a comma (eg. tag1,tag2) are kept together as an AND list (tag1 AND tag2).  The lists can be mixed together (eg. tag1 OR (tag2 AND tag3)).
   * Keeping the hostname as DEFAULT will set pruning to occur only for snapshots taken from the host where the script was generated.  A different host can be specified, or leave the option blank to specify all host's snapshots.
   * 'group_by:' will group the snapshots together for a more controlled pruning.  Any of the three options (paths,tags,hosts) can be used and separated by a comma if more than one is used.  See the Restic manual for more specific inforamtion on how pruning and tags work.
+
+## Things To Know
+
+### Logging
+
+  The backup scripts do log some of what occurs to a log rotated log file in the .config/restic-backup/logs directory.  While the logging does technically work, it is in need of plenty of work.  It is definitely on the future roadmap.

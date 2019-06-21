@@ -27,6 +27,16 @@ except:
 	print("Configuration file at: \n\n\t" + config_path + "\n\ndoes not exist!  \n\nExiting gracefully...\n")
 	exit()
 
+# -- Set global variables from config file -- #
+
+LOGFILE = config['global']['logpath']
+ 
+os.makedirs(os.path.dirname(LOGFILE), exist_ok=True)
+exists = os.path.isfile(LOGFILE)
+if not exists:
+	f = open(LOGFILE, "w")
+	f.close
+	
 # -- Function to end the script -- #
 def end():
 	exit()
@@ -64,7 +74,6 @@ def generate():
 
 			## Variable assignments ##
 			JobFile = os.path.join(FilePath,FileName)
-			LogPath = config['global']['logpath']
 			Repository = config[BACKUP]['repository']
 			BackupSource = config[BACKUP]['bkup_source']
 			GroupBy = config[BACKUP]['group_by']
@@ -109,10 +118,10 @@ def generate():
 			set_HostName = config[BACKUP]['hostname']
 			if set_HostName == "DEFAULT":
 				HostName = socket.gethostname()
-				HostName = "--hostname " + HostName
+				HostName = "--host " + HostName
 			elif set_HostName:
 				HostName = set_HostName
-				HostName = "--hostname " + HostName
+				HostName = "--host " + HostName
 			elif not set_HostName:
 				HostName = ''
 			else:
@@ -123,11 +132,10 @@ def generate():
 				f.write('#!/usr/bin/python\n\n')
 				f.write(f'## -- Host: {HOST} Offsite Backup Script -- ##\n\n')
 				f.write('# -- Imports -- #\n\n')
-				f.write('import log\n')
-				f.write('import utility\n')
 				f.write('import time\n')
 				f.write('import subprocess\n')
 				f.write('import logging\n')
+				f.write('import logging.handlers\n')
 				f.write('import socket\n\n')
 				f.closed
 			
@@ -146,13 +154,16 @@ def generate():
 				f.write("# -- Variables Section -- #\n\n")
 				f.write("TIMESTAMP = time.strftime( '%Y-%m-%d_%H:%M:%S' )\n")
 				f.write("HOST = socket.gethostname()\n\n")
+				f.write(f"LogFile = '{LOGFILE}'\n")
 				
 				f.write("# -- Log File Section -- #\n\n")
-				f.write("LOGPATH = '/home/samuel/coffeecup/.log'\n")
-				f.write("logfile = log.Logging(LOGPATH)\n")
-				f.write("CURRENT_LOG = logfile.find()\n")
-				f.write("logging.basicConfig(filename=CURRENT_LOG, format='%(asctime)s :: %(levelname)s: %(message)s', level=logging.INFO)\n")
-				f.write("LogOut = ' | tee -a ' + CURRENT_LOG\n\n")
+				f.write(f"logger = logging.getLogger('{BackupName}')\n")
+				f.write("log_handler = logging.handlers.TimedRotatingFileHandler(LogFile, when='D', interval=1, backupCount=90)\n")
+				f.write("log_handler.setLevel(logging.INFO)\n")
+				f.write("log_format = logging.Formatter('%(asctime)s :: %(name)s :: %(levelname)s: %(message)s')\n")
+				f.write("log_handler.setFormatter(log_format)\n")
+				f.write("logger.addHandler(log_handler)\n")
+				f.write("LogOut = ' | tee -a ' + LogFile\n\n")
 
 				f.write("logging.info(\"\\n*** HOST: \" + HOST + \" ***\")\n\n")
 
