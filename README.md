@@ -1,6 +1,6 @@
 # README for the Restic script generator
 
-__Version 0.9.3__
+__Version 0.9.4__
 
 The script seems to be functional and has been tested for creating valid backup scripts, but has not been fully vetted.  Verify all backup scripts and use at your own risk.
 
@@ -38,4 +38,4 @@ The script seems to be functional and has been tested for creating valid backup 
 
 ### Logging
 
-  The backup scripts do log some of what occurs to a log rotated log file in the .config/restic-backup/logs directory.  While the logging does technically work, it is in need of plenty of work.  It is definitely on the future roadmap.
+  The backup scripts do log some of what occurs to a rotated log file.  The location of the log file is set in the 'config.yml' under the _global_ options.  While the logging does technically work, it is in need of plenty of work.  It is definitely on the future roadmap.

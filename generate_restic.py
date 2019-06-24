@@ -158,8 +158,8 @@ def generate():
 				
 				f.write("# -- Log File Section -- #\n\n")
 				f.write(f"logger = logging.getLogger('{BackupName}')\n")
+				f.write("logger.setLevel(logging.INFO)\n")
 				f.write("log_handler = logging.handlers.TimedRotatingFileHandler(LogFile, when='D', interval=1, backupCount=90)\n")
-				f.write("log_handler.setLevel(logging.INFO)\n")
 				f.write("log_format = logging.Formatter('%(asctime)s :: %(name)s :: %(levelname)s: %(message)s')\n")
 				f.write("log_handler.setFormatter(log_format)\n")
 				f.write("logger.addHandler(log_handler)\n")
