@@ -149,11 +149,12 @@ def generate():
 				f.write("PruningOptions = '" + PruningOptions + "'\n")
 				f.write("PruningTags = '" + PruningTags + "'\n")
 				f.write("HostName = '" + HostName + "'\n")
-				f.write("GroupBy = --group-by '" + GroupBy + "'\n\n")
+				f.write("GroupBy = '--group-by " + GroupBy + "'\n\n")
 				
 				f.write("# -- Variables Section -- #\n\n")
 				f.write("TIMESTAMP = time.strftime( '%Y-%m-%d_%H:%M:%S' )\n")
-				f.write("HOST = socket.gethostname()\n\n")
+				f.write("HOST = socket.gethostname()\n")
+				f.write("HOST = HOST.upper()\n\n")
 				f.write(f"LogFile = '{LOGFILE}'\n")
 				
 				f.write("# -- Log File Section -- #\n\n")
@@ -165,7 +166,7 @@ def generate():
 				f.write("logger.addHandler(log_handler)\n")
 				f.write("LogOut = ' | tee -a ' + LogFile\n\n")
 
-				f.write("logger.info(\"\\n*** HOST: \" + HOST + \" ***\")\n\n")
+				f.write("logger.info(\"*** HOST: \" + HOST + \" ***\")\n")
 
 				f.closed
 
@@ -174,11 +175,12 @@ def generate():
 				f.write("# -- Backup Section -- #\n\n")
 				
 				f.write("try:\n")
+				f.write("\tlogger.info('Host ' + HOST + ' backups started')\n")
 				f.write("\tRESTIC = (f'restic -r {REPOSITORY} backup {BackupSource} {BackupExclusions} {BackupTags}')\n")
-				f.write("\tlogger.info('Host ' + HOST + ' backups completed')\n")
 				f.write("\tsubprocess.call(RESTIC + LogOut, shell=True)\n")
+				f.write("\tlogger.info('Host ' + HOST + ' backups completed at ' + TIMESTAMP)\n")
 				f.write("except:\n")
-				f.write("\tlogger.info('!!! Host ' + HOST + ' backups failed !!!')\n\n")
+				f.write("\tlogger.info('!!! Host ' + HOST + ' backups failed at ' + TIMESTAMP + ' !!!')\n\n")
 				
 			## Write pruning section to script ##
 				Pruning = config[BACKUP]['pruning']
@@ -186,11 +188,12 @@ def generate():
 					f.write("# -- Pruning Section -- #\n\n")
 					
 					f.write("try:\n")
+					f.write("\tlogger.info('Host ' + HOST + ' pruning started')\n")
 					f.write("\tRESTIC = (f'restic -r {REPOSITORY} forget {PruningOptions} --prune {PruningTags} {GroupBy} {HostName}')\n")
 					f.write("\tsubprocess.call(RESTIC + LogOut, shell=True)\n")
-					f.write("\tlogger.info('Host ' + HOST + ' pruning completed')\n")
+					f.write("\tlogger.info('Host ' + HOST + ' pruning completed at ' + TIMESTAMP)\n")
 					f.write("except:\n")
-					f.write("\tlogger.info('!!! Host ' + HOST + ' pruning failed !!!')\n")
+					f.write("\tlogger.info('!!! Host ' + HOST + ' pruning failed at ' + TIMESTAMP + ' !!!')\n")
 
 				f.closed
 			
