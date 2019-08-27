@@ -165,7 +165,7 @@ def generate():
 				f.write("logger.addHandler(log_handler)\n")
 				f.write("LogOut = ' | tee -a ' + LogFile\n\n")
 
-				f.write("logging.info(\"\\n*** HOST: \" + HOST + \" ***\")\n\n")
+				f.write("logger.info(\"\\n*** HOST: \" + HOST + \" ***\")\n\n")
 
 				f.closed
 
@@ -175,10 +175,10 @@ def generate():
 				
 				f.write("try:\n")
 				f.write("\tRESTIC = (f'restic -r {REPOSITORY} backup {BackupSource} {BackupExclusions} {BackupTags}')\n")
-				f.write("\tlogging.info('Host ' + HOST + ' backups completed')\n")
+				f.write("\tlogger.info('Host ' + HOST + ' backups completed')\n")
 				f.write("\tsubprocess.call(RESTIC + LogOut, shell=True)\n")
 				f.write("except:\n")
-				f.write("\tlogging.info('!!! Host ' + HOST + ' backups failed !!!')\n\n")
+				f.write("\tlogger.info('!!! Host ' + HOST + ' backups failed !!!')\n\n")
 				
 			## Write pruning section to script ##
 				Pruning = config[BACKUP]['pruning']
@@ -188,9 +188,9 @@ def generate():
 					f.write("try:\n")
 					f.write("\tRESTIC = (f'restic -r {REPOSITORY} forget {PruningOptions} --prune {PruningTags} {GroupBy} {HostName}')\n")
 					f.write("\tsubprocess.call(RESTIC + LogOut, shell=True)\n")
-					f.write("\tlogging.info('Host ' + HOST + ' pruning completed')\n")
+					f.write("\tlogger.info('Host ' + HOST + ' pruning completed')\n")
 					f.write("except:\n")
-					f.write("\tlogging.info('!!! Host ' + HOST + ' pruning failed !!!')\n")
+					f.write("\tlogger.info('!!! Host ' + HOST + ' pruning failed !!!')\n")
 
 				f.closed
 			
