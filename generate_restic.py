@@ -149,7 +149,7 @@ def generate():
 				f.write("PruningOptions = '" + PruningOptions + "'\n")
 				f.write("PruningTags = '" + PruningTags + "'\n")
 				f.write("HostName = '" + HostName + "'\n")
-				f.write("GroupBy = '" + GroupBy + "'\n\n")
+				f.write("GroupBy = --group-by '" + GroupBy + "'\n\n")
 				
 				f.write("# -- Variables Section -- #\n\n")
 				f.write("TIMESTAMP = time.strftime( '%Y-%m-%d_%H:%M:%S' )\n")
