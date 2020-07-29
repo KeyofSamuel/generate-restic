@@ -1,6 +1,8 @@
 global:
   logging: enable
-  logpath: /path/to/.log
+  log_level: INFO
+  logpath: /home/samuel/.config/hb_reports/hb_reports.log
+  raw_files:
 
 Sample_Backup: # The name of the backup job
   repository: /path/to/repository

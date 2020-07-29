@@ -54,13 +54,14 @@ def menu():
 
 	# Menu options and display #
 	menu_options = ["1 - Generate a new Restic backup job",
+					"2 - Generate a consecutive executable script",
 					"0 - Quit"]
 
 	for i in menu_options:
 		print(" "*20 + i)
 	print()
 
-# -- Function to set subsequent working directory -- #
+# -- Function to generate the Restic backup job -- #
 def generate():
 
 	## Loop over all backup sections in config ##
@@ -198,6 +199,82 @@ def generate():
 				f.closed
 			
 			subprocess.call("chmod +x " + JobFile,shell=True)
+
+def consecutive():
+	
+	'''
+	Scan the config folder for backups
+	display backups
+	Allow for the selection of specific backups
+	write out an executable script
+	'''
+	
+	subprocess.call("clear",shell=True)
+	print('{:^80}'.format('#' + ' '*4 + 'Generate a consecutive executable script ' + ' '*4 + '#'))
+	print()
+	
+	FilePath = "/home/" + USERNAME + "/.config/restic-backup/"
+	(_, _, filenames) = next(os.walk(FilePath))
+	
+	# Null lists values #
+	file_dict = {}		# null dictionary for files and names
+	sort_dict = {}		# null dictionary for files sort directories
+	sort_list = []		# null list for files sort directories
+	backupList = []		# null list for files sort directories
+	increment = 0
+
+	for i in filenames:
+		if i[-6:] == "backup":
+			FullPath = os.path.join(FilePath,i)
+			file_dict.update({i:FullPath})	# Create dictionary of file and directory
+	
+	for i in file_dict:
+		sort_list.append(i)
+
+	sort_list.sort()
+	
+	for i in sort_list:
+		increment += 1
+		x = file_dict[i]
+		sort_dict.update({increment:i})
+	
+	print()
+	print(" "*20 + "Below is the list of backup files.  Choose a file by number to add to the consecutive execution script.")
+	print(" "*20 + "Add as many files as desired.  Press \"q\" when you are finished adding files.")
+	print()
+	
+	pick = ""
+	while pick != 0:
+		for m in sort_dict:
+			print(" "*23, m, "->", sort_dict[m]) 	# Prints the sorted file list
+
+		print()
+		pick = input(" "*20 + "Pick a file by number!\n" + " "*20 + "-> ")
+		if pick == "q":
+			pick = 0
+		pick = int(pick)
+		
+		for m in sort_dict:
+			if m == pick:
+				x = sort_dict[m]
+				backupList.append(file_dict[x])
+	
+	print()
+	BackupScript = input(" "*20 + "Enter the name of the consecutive execution script\n" + " "*20 + "-> ")
+	BackupScript = os.path.join(FilePath,BackupScript)
+	
+	## Write backup files to consecutive script ##
+	with open(BackupScript, 'w') as f:
+		f.write('#!/bin/bash\n\n')
+		f.write('# -- Backup Scripts to Execute -- #\n')
+		
+		for i in backupList:
+			f.write(i + "\n")
+			
+		f.closed
+
+	subprocess.call("chmod +x " + BackupScript,shell=True)
+	
 		  
 ## -- Start the Application Here -- ##
 
@@ -214,7 +291,7 @@ while choice != "0":
 
 	choice = input(" "*20 + "Please choose a menu option\n" + " "*20 + "-> ")
 	
-	menu_options = {'0':end, '1':generate}
+	menu_options = {'0':end, '1':generate, '2':consecutive}
 	
 	try:
 		menu_options[choice]()
